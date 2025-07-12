@@ -1,9 +1,9 @@
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
 
-load_dotenv()   # если используете .env для BOT_TOKEN
+load_dotenv()   # подтягиваем BOT_TOKEN из .env
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "<ВАШ_ТОКЕН>")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # Endpoints Flask API на VPN-серверах
 API_ENDPOINTS = {
@@ -11,8 +11,11 @@ API_ENDPOINTS = {
     "US": "http://185.106.95.235:8080/add_user"
 }
 
-# Доменная часть для линков
+# Домены для формирования VLESS-ссылки
 DOMAINS = {
     "RU": "vpn.independentvpn.ru",
     "US": "us.independentvpn.ru"
 }
+
+# Порт, который вы используете (443 или 8443 и т.п.)
+PORT = 443
