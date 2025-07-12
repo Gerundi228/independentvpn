@@ -23,8 +23,13 @@ logger = logging.getLogger(__name__)
 
 # ─── ErrorHandler для всех необработанных исключений ────────────────────────────
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # печатаем полный traceback (уже есть)
     logger.error("Exception while handling an update:", exc_info=context.error)
-    # если есть сообщение — уведомим пользователя
+    
+    # теперь явно логируем текст ошибки
+    err = context.error
+    logger.error(">>> CONTEXT.ERROR: %s", err)
+    
     if hasattr(update, "message") and update.message:
         try:
             await update.message.reply_text(
