@@ -1,6 +1,5 @@
-# bot.py
-
 import os
+import logging
 import qrcode
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import (
@@ -11,18 +10,35 @@ from telegram.ext import (
     filters
 )
 
-import logging
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
-print("=== BOT STARTED ===")
-
 from config import BOT_TOKEN, API_ENDPOINTS, DOMAINS, PORT
 from vpn_api import add_user_to_vpn
 from db import init_db, add_user_record, get_user_record
 
-# Инициализируем базу при старте
+# ─── Настройка логирования ──────────────────────────────────────────────────────
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.DEBUG
+)
+logger = logging.getLogger(__name__)
+
+# ─── ErrorHandler для всех необработанных исключений ────────────────────────────
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logger.error("Exception while handling an update:", exc_info=context.error)
+    # если есть сообщение — уведомим пользователя
+    if hasattr(update, "message") and update.message:
+        try:
+            await update.message.reply_text(
+                "❌ Упс! Внутренняя ошибка, администратор уже смотрит логи."
+            )
+        except Exception:
+            logger.exception("Failed to send error message to user")
+
+# ─── Инициализируем БД ──────────────────────────────────────────────────────────
 init_db()
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# ─── Хэндлеры ───────────────────────────────────────────────────────────────────
+async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.debug(f"/start from {update.effective_user.id}")
     kb = ReplyKeyboardMarkup(
         [["🇷🇺 Россия", "🇺🇸 США"]],
         resize_keyboard=True
@@ -30,23 +46,25 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Привет! Выберите сервер:", reply_markup=kb)
 
 async def handle_region(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print(f"*** GOT MESSAGE: {update.message.text!r} from {update.effective_user.id}")
-    logging.debug(f"*** GOT MESSAGE: {update.message.text!r}")
     text = update.message.text
-    user_id = update.message.from_user.id
-    region = "RU" if text == "🇷🇺 Россия" else "US"
+    user_id = update.effective_user.id
+    logger.debug(f"handle_region got {text!r} from {user_id}")
 
-    # Проверяем, не выдавали ли уже доступ для этого региона
+    region = "RU" if text == "🇷🇺 Россия" else "US"
     rec = get_user_record(user_id)
+
     if rec and rec[1] == region:
         user_uuid = rec[0]
+        logger.debug(f"Existing UUID for {user_id}: {user_uuid}")
     else:
         try:
             user_uuid = add_user_to_vpn(region, user_id)
+            logger.info(f"New UUID for {user_id} ({region}): {user_uuid}")
+            add_user_record(user_id, user_uuid, region)
         except Exception as e:
+            logger.exception("API error")
             await update.message.reply_text(f"❌ Ошибка API: {e}")
             return
-        add_user_record(user_id, user_uuid, region)
 
     domain = DOMAINS[region]
     link = (
@@ -58,16 +76,19 @@ async def handle_region(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Генерация QR
     img = qrcode.make(link)
-    path = f"/tmp/{user_id}_{region}.png"
-    img.save(path)
+    qr_path = f"/tmp/{user_id}_{region}.png"
+    img.save(qr_path)
 
     # Отправляем ссылку и QR
     await update.message.reply_text(f"🔗 Ваша ссылка:\n`{link}`", parse_mode="Markdown")
-    await update.message.reply_photo(photo=open(path, "rb"))
-    os.remove(path)
+    with open(qr_path, "rb") as photo:
+        await update.message.reply_photo(photo=photo)
+    os.remove(qr_path)
 
-async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    rec = get_user_record(update.message.from_user.id)
+async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    rec = get_user_record(user_id)
+    logger.debug(f"/status for {user_id}: {rec}")
     if rec:
         await update.message.reply_text(
             f"Ваш UUID: `{rec[0]}`\n"
@@ -78,13 +99,19 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("У вас пока нет доступа. Нажмите /start")
 
+# ─── Запуск бота ────────────────────────────────────────────────────────────────
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.Regex("🇷🇺 Россия|🇺🇸 США"), handle_region))
-    app.add_handler(CommandHandler("status", status))
+    # Регистрируем ErrorHandler первым
+    app.add_error_handler(error_handler)
 
+    # Регистрируем команды и хэндлеры
+    app.add_handler(CommandHandler("start", cmd_start))
+    app.add_handler(MessageHandler(filters.Regex("🇷🇺 Россия|🇺🇸 США"), handle_region))
+    app.add_handler(CommandHandler("status", cmd_status))
+
+    logger.info("Bot is starting...")
     app.run_polling()
 
 if __name__ == "__main__":
