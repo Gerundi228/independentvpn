@@ -11,6 +11,10 @@ from telegram.ext import (
     filters
 )
 
+import logging
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
+print("=== BOT STARTED ===")
+
 from config import BOT_TOKEN, API_ENDPOINTS, DOMAINS, PORT
 from vpn_api import add_user_to_vpn
 from db import init_db, add_user_record, get_user_record
