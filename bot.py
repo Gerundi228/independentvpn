@@ -108,16 +108,20 @@ async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # Регистрируем ErrorHandler первым
+    # Удаляем web-hook (если когда-то включали), чтобы не было конфликта
+    app.bot.delete_webhook(drop_pending_updates=True)
+
+    # Регистрируем ErrorHandler
     app.add_error_handler(error_handler)
 
-    # Регистрируем команды и хэндлеры
+    # Регистрируем хэндлеры
     app.add_handler(CommandHandler("start", cmd_start))
     app.add_handler(MessageHandler(filters.Regex("🇷🇺 Россия|🇺🇸 США"), handle_region))
     app.add_handler(CommandHandler("status", cmd_status))
 
-    logger.info("Bot is starting...")
-    app.run_polling()
+    logger.info("Bot is starting with drop_pending_updates=True...")
+    # Сбрасываем все pending updates и стартуем
+    app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
     main()
