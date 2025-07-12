@@ -30,6 +30,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Привет! Выберите сервер:", reply_markup=kb)
 
 async def handle_region(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print(f"*** GOT MESSAGE: {update.message.text!r} from {update.effective_user.id}")
+    logging.debug(f"*** GOT MESSAGE: {update.message.text!r}")
     text = update.message.text
     user_id = update.message.from_user.id
     region = "RU" if text == "🇷🇺 Россия" else "US"
