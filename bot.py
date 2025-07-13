@@ -79,7 +79,7 @@ async def handle_region(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"&host={domain}"
         f"&path=%2Fvpn"
         f"#{region}-VPN"
-    )
+        )
 
     # Генерация QR
     img = qrcode.make(link)
