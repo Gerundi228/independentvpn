@@ -72,10 +72,12 @@ async def handle_region(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
     domain = DOMAINS[region]
-    link = (
-        f"vless://{user_uuid}@{domain}:{PORT}"
+        link = (
+        f"vless://{user_uuid}@{domain}:443"
         f"?encryption=none&security=tls"
-        f"&type=grpc&serviceName=vpn&sni={domain}"
+        f"&type=ws"
+        f"&host={domain}"
+        f"&path=%2Fvpn"
         f"#{region}-VPN"
     )
 
