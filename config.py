@@ -13,7 +13,7 @@ API_ENDPOINTS = {
 
 # Домены для формирования VLESS-ссылки
 DOMAINS = {
-    "RU": "vpn.independentvpn.ru",
+    "RU": "ru.independentvpn.ru",
     "US": "us.independentvpn.ru"
 }
 
