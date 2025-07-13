@@ -54,47 +54,36 @@ async def handle_region(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     region  = "RU" if update.message.text.startswith("🇷🇺") else "US"
 
--   # раньше мы проверяли sqlite, теперь всегда запрашиваем новый
--   rec = get_user_record(user_id)
--   if rec and rec[1] == region:
--       user_uuid = rec[0]
--   else:
--       user_uuid = add_user_to_vpn(region, user_id)
--       add_user_record(user_id, user_uuid, region)
+    # 1) Запросим у API всегда новый UUID
+    try:
+        user_uuid = add_user_to_vpn(region, user_id)
+        add_user_record(user_id, user_uuid, region)
+        logger.info(f"Generated new UUID {user_uuid} for user {user_id} ({region})")
+    except Exception as e:
+        logger.exception("API error in handle_region")
+        return await update.message.reply_text(f"❌ Ошибка API: {e}")
 
-    if rec and rec[1] == region:
-        user_uuid = rec[0]
-        logger.debug(f"Existing UUID for {user_id}: {user_uuid}")
-    else:
-        try:
-            user_uuid = add_user_to_vpn(region, user_id)
-            logger.info(f"New UUID for {user_id} ({region}): {user_uuid}")
-            add_user_record(user_id, user_uuid, region)
-        except Exception as e:
-            logger.exception("API error")
-            await update.message.reply_text(f"❌ Ошибка API: {e}")
-            return
-
+    # 2) Формируем ссылку и QR
     domain = DOMAINS[region]
-        link = (
+    link = (
         f"vless://{user_uuid}@{domain}:443"
         f"?encryption=none&security=tls"
         f"&type=ws"
         f"&host={domain}"
         f"&path=%2Fvpn"
         f"#{region}-VPN"
-        )
+    )
 
-    # Генерация QR
     img = qrcode.make(link)
     qr_path = f"/tmp/{user_id}_{region}.png"
     img.save(qr_path)
 
-    # Отправляем ссылку и QR
+    # 3) Отправляем
     await update.message.reply_text(f"🔗 Ваша ссылка:\n`{link}`", parse_mode="Markdown")
     with open(qr_path, "rb") as photo:
         await update.message.reply_photo(photo=photo)
     os.remove(qr_path)
+
 
 async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
