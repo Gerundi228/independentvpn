@@ -51,6 +51,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Привет! Выберите сервер:", reply_markup=kb)
 
 async def handle_region(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print(">>> handle_region called with:", update.message.text)
     user_id = update.effective_user.id
     region  = "RU" if update.message.text.startswith("🇷🇺") else "US"
 
