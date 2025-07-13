@@ -51,12 +51,16 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Привет! Выберите сервер:", reply_markup=kb)
 
 async def handle_region(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
     user_id = update.effective_user.id
-    logger.debug(f"handle_region got {text!r} from {user_id}")
+    region  = "RU" if update.message.text.startswith("🇷🇺") else "US"
 
-    region = "RU" if text == "🇷🇺 Россия" else "US"
-    rec = get_user_record(user_id)
+-   # раньше мы проверяли sqlite, теперь всегда запрашиваем новый
+-   rec = get_user_record(user_id)
+-   if rec and rec[1] == region:
+-       user_uuid = rec[0]
+-   else:
+-       user_uuid = add_user_to_vpn(region, user_id)
+-       add_user_record(user_id, user_uuid, region)
 
     if rec and rec[1] == region:
         user_uuid = rec[0]
