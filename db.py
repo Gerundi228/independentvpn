@@ -1,37 +1,59 @@
 import sqlite3
-from datetime import datetime, timedelta
+from pathlib import Path
 
-DB_PATH = "users.db"
+DB_PATH = Path(__file__).parent / "vpn.db"
+
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def init_db():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-      user_id   INTEGER PRIMARY KEY,
-      uuid      TEXT    NOT NULL,
-      region    TEXT    NOT NULL,
-      expires   DATE    NOT NULL
-    )
-    """)
+    if not DB_PATH.exists():
+        conn = get_db()
+        conn.executescript("""
+        CREATE TABLE users (
+          id         INTEGER PRIMARY KEY AUTOINCREMENT,
+          tg_id      INTEGER UNIQUE,
+          uuid       TEXT UNIQUE,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE regions (
+          id     INTEGER PRIMARY KEY AUTOINCREMENT,
+          code   TEXT UNIQUE,
+          name   TEXT,
+          domain TEXT,
+          port   INTEGER DEFAULT 443,
+          type   TEXT DEFAULT 'ws',
+          path   TEXT DEFAULT '/vpn'
+        );
+        """)
+        # Прелоадим три региона
+        conn.executemany(
+          "INSERT INTO regions (code,name,domain) VALUES (?,?,?)",
+          [
+            ("RU","Россия","ru.independentvpn.ru"),
+            ("US","США",   "us.independentvpn.ru"),
+            ("KZ","Казахстан","kz.independentvpn.ru"),
+          ]
+        )
+        conn.commit()
+        conn.close()
+
+def get_user(tg_id):
+    conn = get_db()
+    row = conn.execute("SELECT * FROM users WHERE tg_id=?", (tg_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def add_user(tg_id, uuid):
+    conn = get_db()
+    conn.execute("INSERT OR IGNORE INTO users (tg_id,uuid) VALUES (?,?)", (tg_id,uuid))
     conn.commit()
     conn.close()
 
-def add_user_record(user_id: int, uuid_str: str, region: str, days: int = 30):
-    expires = (datetime.now() + timedelta(days=days)).date().isoformat()
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute(
-        "REPLACE INTO users (user_id, uuid, region, expires) VALUES (?,?,?,?)",
-        (user_id, uuid_str, region, expires)
-    )
-    conn.commit()
+def get_regions():
+    conn = get_db()
+    rows = conn.execute("SELECT * FROM regions ORDER BY id").fetchall()
     conn.close()
-
-def get_user_record(user_id: int):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("SELECT uuid, region, expires FROM users WHERE user_id=?", (user_id,))
-    row = c.fetchone()
-    conn.close()
-    return row  # None или (uuid, region, expires)
+    return [dict(r) for r in rows]
