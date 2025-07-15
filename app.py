@@ -6,6 +6,7 @@ from db import init_db, get_regions
 app = Flask(__name__)
 UUID_RE = re.compile(r"^[a-f0-9-]{36}$", re.I)
 
+# создаём БД при старте, если её нет
 init_db()
 
 @app.route("/subscribe/<uuid>")
