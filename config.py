@@ -6,13 +6,15 @@ API_URL   = "http://ru.independentvpn.ru:8080/subscribe"
 # Endpoints Flask API на VPN-серверах
 API_ENDPOINTS = {
     "RU": "http://194.87.74.91:8080/add_user",
-    "US": "http://185.106.95.235:8080/add_user"
+    "US": "http://185.106.95.235:8080/add_user",
+    "KZ": "http://45.144.175.11:8080/add_user"
 }
 
 # Домены для формирования VLESS-ссылки
 DOMAINS = {
     "RU": "ru.independentvpn.ru",
-    "US": "us.independentvpn.ru"
+    "US": "us.independentvpn.ru",
+    "KZ": "kz.independentvpn.ru" 
 }
 
 # Порт, который вы используете (443 или 8443 и т.п.)
