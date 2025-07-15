@@ -35,6 +35,7 @@ def init_db():
             ("RU","Россия","ru.independentvpn.ru"),
             ("US","США",   "us.independentvpn.ru"),
             ("KZ","Казахстан","kz.independentvpn.ru"),
+            ("FIN","Финляндия","fin.independentvpn.ru"),
           ]
         )
         conn.commit()
