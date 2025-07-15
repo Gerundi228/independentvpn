@@ -1,3 +1,4 @@
+# db.py
 import sqlite3
 from pathlib import Path
 
@@ -28,30 +29,17 @@ def init_db():
           path   TEXT DEFAULT '/vpn'
         );
         """)
-        # Прелоадим три региона
         conn.executemany(
           "INSERT INTO regions (code,name,domain) VALUES (?,?,?)",
           [
             ("RU","Россия","ru.independentvpn.ru"),
-            ("US","США",   "us.independentvpn.ru"),
+            ("US","США","us.independentvpn.ru"),
             ("KZ","Казахстан","kz.independentvpn.ru"),
             ("FIN","Финляндия","fin.independentvpn.ru"),
           ]
         )
         conn.commit()
         conn.close()
-
-def get_user(tg_id):
-    conn = get_db()
-    row = conn.execute("SELECT * FROM users WHERE tg_id=?", (tg_id,)).fetchone()
-    conn.close()
-    return dict(row) if row else None
-
-def add_user(tg_id, uuid):
-    conn = get_db()
-    conn.execute("INSERT OR IGNORE INTO users (tg_id,uuid) VALUES (?,?)", (tg_id,uuid))
-    conn.commit()
-    conn.close()
 
 def get_regions():
     conn = get_db()
