@@ -4,3 +4,4 @@ qrcode
 pysqlite3
 python-dotenv
 pillow
+paramiko
