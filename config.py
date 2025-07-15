@@ -1,10 +1,8 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()   # подтягиваем BOT_TOKEN из .env
-
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-
+BOT_TOKEN = "7971301798:AAErmSXi-WVr7YLJGlMrmo2g1w_Cb56p0Iw"
+API_URL   = "http://ru.independentvpn.ru:8080/subscribe" 
 # Endpoints Flask API на VPN-серверах
 API_ENDPOINTS = {
     "RU": "http://194.87.74.91:8080/add_user",
