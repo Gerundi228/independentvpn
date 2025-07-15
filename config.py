@@ -1,23 +1,35 @@
-import os
-from dotenv import load_dotenv
-
-BOT_TOKEN = "7971301798:AAErmSXi-WVr7YLJGlMrmo2g1w_Cb56p0Iw"
-API_URL   = "http://ru.independentvpn.ru:8080/subscribe" 
-# Endpoints Flask API на VPN-серверах
-API_ENDPOINTS = {
-    "RU": "http://194.87.74.91:8080/add_user",
-    "US": "http://185.106.95.235:8080/add_user",
-    "KZ": "http://45.144.175.11:8080/add_user",
-    "FIN": "http://64.188.73.65:8080/add_user"
+# config.py
+REGION_SERVERS = {
+    "RU": {
+        "host":        "194.87.74.91",
+        "ssh_user":    "root",
+        "ssh_port":    22,
+        "ssh_key":     "/root/.ssh/id_ed25519",
+        "config_path": "/usr/local/etc/xray/config.json",
+        "service":     "xray"
+    },
+    "US": {
+        "host":        "185.106.95.235",
+        "ssh_user":    "root",
+        "ssh_port":    22,
+        "ssh_key":     "/root/.ssh/id_ed25519",
+        "config_path": "/usr/local/etc/xray/config.json",
+        "service":     "xray"
+    },
+    "KZ": {
+        "host":        "45.144.175.11",
+        "ssh_user":    "root",
+        "ssh_port":    22,
+        "ssh_key":     "/root/.ssh/id_ed25519",
+        "config_path": "/usr/local/etc/xray/config.json",
+        "service":     "xray"
+    },
+    "FIN": {
+        "host":        "64.188.73.65",
+        "ssh_user":    "root",
+        "ssh_port":    22,
+        "ssh_key":     "/root/.ssh/id_ed25519",
+        "config_path": "/usr/local/etc/xray/config.json",
+        "service":     "xray"
+    },
 }
-
-# Домены для формирования VLESS-ссылки
-DOMAINS = {
-    "RU": "ru.independentvpn.ru",
-    "US": "us.independentvpn.ru",
-    "KZ": "kz.independentvpn.ru",
-    "FIN": "fin.independentvpn.ru"
-}
-
-# Порт, который вы используете (443 или 8443 и т.п.)
-PORT = 443
