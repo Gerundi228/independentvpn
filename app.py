@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from flask import Flask, Response, abort
 import re
 from db import init_db, get_regions
